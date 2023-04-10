@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import time
 import csv
-from config import *
-from process_utils import *
+from DPS.config import *
+from DPS.process_utils import *
 from pathlib import Path
 from datetime import datetime
 

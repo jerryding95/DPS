@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.linalg import inv
-from config import *
+from DPS.config import *
 
 class kalman_1d:
 	def __init__(self, state, std, noise):

@@ -3,11 +3,11 @@ import time
 import socket
 import sys
 import numpy as np
-from config import *
-from noise_utils import *
-from slurm_utils import *
-from rapl_utils import *
-from process_utils import *
+from DPS.config import *
+from DPS.noise_utils import *
+from DPS.slurm_utils import *
+from DPS.rapl_utils import *
+from DPS.process_utils import *
 from scipy.signal import find_peaks
 
 

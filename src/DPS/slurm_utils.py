@@ -1,8 +1,8 @@
 import socket
-from rapl_utils import *
+from DPS.rapl_utils import *
 import numpy as np
 import math
-from config import *
+from DPS.config import *
 
 class Slurm:
 	def __init__(self, init_cap, inc_threshold = .98, dec_threshold = .9, inc_amt = 30, dec_amt = 30):

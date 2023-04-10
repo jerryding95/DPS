@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from config import *
+from DPS.config import *
 import time
 
 TEMPT_PATH = Path('/home/cc/tmp/')

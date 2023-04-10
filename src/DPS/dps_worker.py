@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 from config import *
-from dps import DPS_worker
+from DPS.dps import DPS_worker
 RAPL_CAP_ARR = np.ones(2)*config.TDP
 
 

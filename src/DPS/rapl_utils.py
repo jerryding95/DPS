@@ -1,7 +1,7 @@
 import numpy as np
 import csv
-from config import *
-from process_utils import *
+from DPS.config import *
+from DPS.process_utils import *
 from pathlib import Path
 import os
 import time
