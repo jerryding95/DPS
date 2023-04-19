@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,9 +10,20 @@ authors = [
 ]
 description = "Dynamic Power Scheduler"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.6"
+dependencies = [
+    "scipy",
+    "numpy",
+    "pathlib",
+    "subprocess",
+    "csv",
+    "socket",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]

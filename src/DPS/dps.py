@@ -3,6 +3,7 @@ import time
 import socket
 import sys
 import numpy as np
+import pathlib
 from DPS.config import *
 from DPS.noise_utils import *
 from DPS.slurm_utils import *
@@ -20,7 +21,7 @@ class DPS_supermaster:
 	RAPL_POWER_LEVEL = np.zeros(SHAPE,dtype=np.int)
 	SHORT_EPOCH_FLAG = np.zeros(SHAPE,dtype=np.int)
 	_sentinel = Sentinel(config.CLUSTER_COUNT)
-	ALGS = ['equal','dps','oracle','slurm']
+	ALGS = ['const','dps','oracle','slurm']
 	CAP = 165
 	SLURM_SCHEDULER = None
 	percentile_inc = None
@@ -31,14 +32,14 @@ class DPS_supermaster:
 	measurement_noise = None
 	ALG = None
 	filter_md = None
-	cap_file, level_file, est_file = None, None, None
+	time_file cap_file, level_file, est_file = None, None, None, None
 	worker_p_arr, stdout_arr = [], []
 	sockets = []
 
 	def __init__(self, alg, deriv_threshold = config.DERIV_THRESHOLD, \
 			process_noise = config.PROCESS_NOISE, measurement_noise = config.MEASUREMENT_NOISE, \
 			percentile_inc = 0.2, percentile_dec = 0.2, allowance = 0.95, \
-			cap_file = 'cap.log', level_file = 'level.log', est_file = 'est.log'):
+			time_file = 'time.log', cap_file = 'cap.log', level_file = 'level.log', est_file = 'est.log'):
 		# self.SHAPE = (len(config.EXP_NODES),2)
 		# self.RAPL_CAP_ARR = np.ones(SHAPE,dtype=np.int)*config.TDP
 		# self.RAPL_POWER_ARR = np.ones(SHAPE)
@@ -58,7 +59,8 @@ class DPS_supermaster:
 		self.allowance = allowance
 		self.filter_md = kalman_md(self.EST_POWER_ARR_HX[-1],50.0,self.process_noise,1.0)
 		# self._sentinel = Sentinel(config.CLUSTER_COUNT)
-		self.cap_file, self.level_file, self.est_file = open(cap_file,'a'), open(level_file,'a'), open(est_file,'a')
+		self.time_file, self.cap_file, self.level_file, self.est_file = \
+			open(time_file,'a'), open(cap_file,'a'), open(level_file,'a'), open(est_file,'a')
 		# self.func = {'equal': equal_alc_caps,
 		# 		'dps': mult_inc_mult_dec,
 		# 		'oracle': oracle_alc_caps,
@@ -71,7 +73,7 @@ class DPS_supermaster:
 		set_workers_pkg_power_cap(config.TDP,config.TDP)
 
 		# Start dyn_rapl_worker on all workers
-		self.worker_p_arr, self.stdout_arr = self.start_dyn_workers('~/chameleon-files/dps_worker.py', \
+		self.worker_p_arr, self.stdout_arr = self.start_dyn_workers(f'{Path().absolute()}/dps_client.py', \
 			f'--cap {config.TDP}')
 
 		time.sleep(3)
@@ -92,19 +94,19 @@ class DPS_supermaster:
 	######### Process Uilt Functions #########
 
 	def start_dyn_workers(self, file, args):
+		mkdir(config.RECORD_PATH.joinpath('logs'))
 		cmd = f'sudo python3 {file} {args}'
-
 		agent_p_arr = []
 		stdout_arr = []
 		nodes_per_cluster = config.NODE_COUNT//config.CLUSTER_COUNT
 		for i in config.EXP_NODES:
 			print(f'Starting dyn_rapl_worker on worker{i}')
-			fname = f"logs/random_app_exp_{config.TDP}_stdout_worker_{i}.txt"
+			fname = f"logs/stdout_worker_{i}.txt"
 			f = open(config.RECORD_PATH.joinpath(fname), "a")
 			p = subprocess.Popen(["ssh", f'slave{i}', cmd], stdout=f,stderr=f)
 			agent_p_arr.append(p)
 			stdout_arr.append(f)
-			print(f'dyn_rapl_worker started on worker{i}')
+			print(f'DPS client started on worker{i}')
 		return agent_p_arr, stdout_arr
 
 	##########################################
@@ -340,7 +342,7 @@ class DPS_supermaster:
 	#### Cap Adjusting Algorithm Together ####
 
 	def decide_caps(self, alg):
-		func = {'equal': self.equal_alc_caps,
+		func = {'const': self.equal_alc_caps,
 			'dps': self.dps,
 			'oracle': self.oracle_alc_caps,
 			'slurm': self.slurm_alc_caps}
@@ -356,6 +358,7 @@ class DPS_supermaster:
 	############## Recording #################
 
 	def record_rapl(self):
+		np.savetxt(self.time_file, time.time())
 		np.savetxt(self.cap_file, self.RAPL_CAP_ARR)
 		np.savetxt(self.level_file, self.RAPL_POWER_LEVEL)
 		np.savetxt(self.est_file, self.EST_POWER_ARR_HX[-1])

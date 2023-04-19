@@ -5,40 +5,45 @@ import socket
 import numpy as np
 import sys
 import argparse
-from config import *
-from rapl_utils import *
-from perf_utils import *
-from noise_utils import *
-from slurm_utils import *
-from process_utils import *
-from dps import *
+from DPS.config import *
+from DPS.rapl_utils import *
+from DPS.perf_utils import *
+from DPS.noise_utils import *
+from DPS.slurm_utils import *
+from DPS.process_utils import *
+from DPS.dps import *
 
 
-PARALLELISM = 384
+PARALLELISM_HIGH = 384
+PARALLELISM_LOW = 8
 BENCHMARK_HIBENCH = ['kmeans', 'lda', 'linear', 'lr', 'bayes', 'rf','gmm']
 BENCHMARK_LOW_POWER = ['wordcount', 'sort', 'repartition', 'terasort']
-BENCHMARK_EQUAL = ['bt','sp']#list(config.NPB_CLASS)
+BENCHMARK_NPB = list(config.NPB_CLASS)
+BENCHMARK_EQUAL = BENCHMARK_NPB + BENCHMARK_HIBENCH
 BENCH_COUNTS = None
 FINISHED = False
 
 
 ####### Cluster Executing Functions ######
 
-def execute_cluster_pairs(ind, npb_bench, count, duration_file, scheduler):
+def execute_cluster_pairs(ind, pair_bench, count, duration_file, scheduler):
 
 	print(f'Executing clusters with mode: Pair, pair_count: {count}')
 	global BENCH_COUNTS, FINISHED
 
 	if ind == 1:
 		while not FINISHED:
-			print(f'Cluster {ind+1}: Starting {npb_bench}')
+			print(f'Cluster {ind+1}: Starting {pair_bench}')
 			app_start_time = time.time()
-			duration = start_npb(ind+1, npb_bench)
-			# time.sleep(3)
-			# duration = 3
+			if pair_bench in BENCHMARK_HIBENCH:
+				duration = start_spark(ind+1, pair_bench, PARALLELISM_HIGH)
+			if pair_bench in BENCHMARK_LOW_POWER:
+				duration = start_spark(ind+1, pair_bench, PARALLELISM_LOW)
+			elif pair_bench in BENCHMARK_NPB:
+				duration = start_npb(ind+1, pair_bench)
 			app_end_time = time.time()
 			with open(duration_file, 'a') as f:
-				f.write(f'{npb_bench}, {app_start_time}, {app_end_time}, {duration}\n')
+				f.write(f'{pair_bench}, {app_start_time}, {app_end_time}, {duration}\n')
 
 	else:
 		for i,benchmark in enumerate(BENCHMARK_HIBENCH):
@@ -86,7 +91,7 @@ def execute_cluster_equal(ind, count, duration_file, scheduler):
 			if benchmark in config.NPB_CLASS:
 				duration = start_npb(ind+1, benchmark)
 			else:
-				duration = start_spark(ind+1, benchmark, PARALLELISM)
+				duration = start_spark(ind+1, benchmark, PARALLELISM_HIGH)
 			app_end_time = time.time()
 
 			with open(duration_file, 'a') as f:
@@ -112,19 +117,26 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--cap', type=int, required=False, default=165)
-	parser.add_argument('--alg', type=str, required=True)
+	parser.add_argument('--pms', type=str, required=True)
 	parser.add_argument('--count', type=int, required=False, default=0)
-	parser.add_argument('--npb', type=str, required=False, default='')
+	parser.add_argument('--pair_bench', type=str, required=False, default='')
+	parser.add_argument('--record', type=str, required=False, default='')
 	args = parser.parse_args()
 
-	config.TDP = args.cap	
-	out_file = f'spark_npb_{config.TDP}.csv'
-	cap_file = config.RECORD_PATH.joinpath(f'spark_npb_{config.TDP}_caps_log')
-	level_file = config.RECORD_PATH.joinpath(f'spark_npb_{config.TDP}_levels_log')
-	est_file = config.RECORD_PATH.joinpath(f'spark_npb_{config.TDP}_est_log')
-	duration_file_arr = [config.RECORD_PATH.joinpath(f'dyn_rapl_time_{i}') for i in range(config.CLUSTER_COUNT)]
+	if args.record: config.RECORD_PATH = args.record
+	mkdir(config.RECORD_PATH)
+	mkdir(config.TEMPT_PATH)
 
-	scheduler = DPS_supermaster(args.alg, cap_file = cap_file, level_file = level_file, est_file = est_file)
+	config.TDP = args.cap	
+	out_file = f'record.csv'
+	time_file = config.RECORD_PATH.joinpath(f'time_log')
+	cap_file = config.RECORD_PATH.joinpath(f'caps_log')
+	level_file = config.RECORD_PATH.joinpath(f'priority_log')
+	est_file = config.RECORD_PATH.joinpath(f'est_power_log')
+	duration_file_arr = [config.RECORD_PATH.joinpath(f'workload_time_{i}') for i in range(config.CLUSTER_COUNT)]
+
+	
+	scheduler = DPS_supermaster(args.pms, time_file = time_file, cap_file = cap_file, level_file = level_file, est_file = est_file)
 
 	# Start monitoring
 	start_perf()
@@ -139,14 +151,14 @@ if __name__ == '__main__':
 
 	# Start threads
 	
-	BENCH_COUNTS = np.zeros(len(BENCHMARK_EQUAL)) if args.alg == 'equal' else np.zeros(len(BENCHMARK_HIBENCH))
+	BENCH_COUNTS = np.zeros(len(BENCHMARK_EQUAL)) if args.pms == 'const' else np.zeros(len(BENCHMARK_HIBENCH))
 
-	if args.alg == 'equal':
+	if args.pms == 'const':
 		cluster_t_arr = [threading.Thread(target=execute_cluster_equal, args=(i,args.count,duration_file_arr[i], scheduler)) for i in range(config.CLUSTER_COUNT)]
-	elif args.npb and args.npb in config.NPB_CLASS:
-		cluster_t_arr = [threading.Thread(target=execute_cluster_pairs, args=(i,args.npb,args.count,duration_file_arr[i], scheduler)) for i in range(config.CLUSTER_COUNT)]
+	elif args.pms in ['slurm', 'dps', 'oracle']:
+		cluster_t_arr = [threading.Thread(target=execute_cluster_pairs, args=(i,args.pair_bench,args.count,duration_file_arr[i], scheduler)) for i in range(config.CLUSTER_COUNT)]
 	else:
-		print(f'NPB benchmark {args.npb} does not exist.')
+		print(f'Power management system {args.pms} does not exist.')
 		for i in range(config.CLUSTER_COUNT):
 			scheduler.sentinel_set(i)
 

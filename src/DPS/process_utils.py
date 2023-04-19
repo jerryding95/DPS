@@ -45,6 +45,21 @@ def checkProcess(name='perf'):
 
     return flags
 
+def mkdir(pname, sudo=False):
+    cmd = ["mkdir" pname]
+    cmd = ["sudo"]+cmd if sudo else cmd
+    subprocess.Popen(cmd, stdout=stdout,stderr=stderr)
+    return
+
+def mkdir_clients(pname, wait=True, sudo=False):
+    cmd = f"mkdir {pname}"
+    cmd = "sudo "+cmd if sudo else cmd
+    for i in config.EXP_NODES:
+        host = "slave" + str(i)
+        process = subprocess.Popen(["ssh", "-f", host, cmd], stdout=stdout,stderr=stderr)
+        if wait:
+            process.communicate()
+    return
 
 # Clean Scheduling Affinity and Perf logfiles
 def cleanFiles(filenames = ['perfRecord','affinity_log.txt']):
@@ -61,7 +76,7 @@ def cleanFiles(filenames = ['perfRecord','affinity_log.txt']):
 def start_spark(ind, benchmark, parallelism):
     print(f'Starting spark app {benchmark} on master{ind}')
 
-    cmd = f'/home/cc/run_hibench.sh {benchmark} {parallelism}'
+    cmd = f'{Path().absolute()}/run_hibench.sh {benchmark} {parallelism}'
     host = f'master{ind}'
 
     p = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
