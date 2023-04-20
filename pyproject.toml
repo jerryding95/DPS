@@ -14,10 +14,6 @@ requires-python = ">=3.6"
 dependencies = [
     "scipy",
     "numpy",
-    "pathlib",
-    "subprocess",
-    "csv",
-    "socket",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
