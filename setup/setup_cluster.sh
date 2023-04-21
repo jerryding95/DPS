@@ -9,7 +9,7 @@ export NUM_CLUSTERS=${num_clusters}
 echo "export KEY=${key}" >> ${hwd}/.bashrc
 echo "export NUM_CLUSTERS=${num_clusters}" >> ${hwd}/.bashrc
 
-num_nodes=$(cat conf/clusterIPs | wc -l)
+num_nodes=$(cat ../conf/clusterIPs | wc -l)
 num_clients=$(($num_nodes-1))
 num_workers=$((num_clients/num_clusters-1))
 
@@ -20,7 +20,7 @@ function install_java {
     for i in $(seq 1 $num_clients)
     do
         ssh slave${i} "sudo apt update;
-        sudo apt install openjdk-8-jdk;
+        sudo apt --assume-yes install openjdk-8-jdk;
         echo \"export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/\" >> ${hwd}/.bashrc"
     done
 }
@@ -29,7 +29,7 @@ function install_hadoop {
     wget "https://archive.apache.org/dist/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz"
     tar -xf hadoop-2.7.7.tar.gz 
     mv hadoop-2.7.7 ${hwd}/hadoop
-    cp conf/hadoop/* ${hwd}/hadoop/etc/hadoop/
+    cp ../conf/hadoop/* ${hwd}/hadoop/etc/hadoop/
     rm ${hwd}/hadoop/etc/hadoop/slaves
     for w in $(seq 1 $num_workers);
     do
@@ -48,7 +48,7 @@ function install_spark {
     wget "https://archive.apache.org/dist/spark/spark-2.4.8/spark-2.4.8-bin-hadoop2.7.tgz"
     tar -xf spark-2.4.8-bin-hadoop2.7.tgz
     mv spark-2.4.8-bin-hadoop2.7 ${hwd}/spark
-    cp conf/spark/* ${hwd}/spark/conf/
+    cp ../conf/spark/* ${hwd}/spark/conf/
     rm ${hwd}/spark/conf/slaves
     for w in $(seq 1 $num_workers);
     do
@@ -64,7 +64,7 @@ function install_spark {
 }
 
 function install_hibench {
-    lines=$(tail -$num_clusters conf/clusterIPs)
+    lines=$(tail -$num_clusters ../conf/clusterIPs)
     SAVEIFS=$IFS
     IFS=$'\n'
     lines=($lines)
@@ -81,7 +81,7 @@ function install_hibench {
 
         start=$((2+${num_workers}*$((i-1))))
         end=$((1+${num_workers}*${i}))
-        worker_lines=$(sed -n "$start,$end p" conf/clusterIPs)
+        worker_lines=$(sed -n "$start,$end p" ../conf/clusterIPs)
         SAVEIFS=$IFS
         IFS=$'\n'
         worker_lines=($worker_lines)
@@ -100,7 +100,7 @@ function install_hibench {
         #     workerips="${workerips} ${$(sed -n "2,$((num_workers+1))p" conf/clusterIPs_${i})[$((2*j-1))]}"
         # done
 
-        scp conf/HiBench/* master${i}:${hwd}/HiBench/conf/
+        scp ../conf/HiBench/* master${i}:${hwd}/HiBench/conf/
         ssh master${i} \
         "echo spark.yarn.preserve.staging.files=false >> ${hwd}/spark/conf/spark-defaults.conf;
         sed -i '/hibench.masters.hostnames/ c\hibench.masters.hostnames    ${masterip}' ${hwd}/HiBench/conf/hibench.conf;
@@ -115,17 +115,14 @@ function install_npb {
         "wget \"https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz\";
         tar -xf NPB3.4.2.tar.gz;
         mv NPB3.4.2 ${hwd}/;
-        sudo apt install gfortran libopenmpi-dev;
+        sudo apt --assume-yes install gfortran libopenmpi-dev;
         for i in \$(seq 1 $num_workers);
-        do echo \"slave\${i} slots=48 max_slots=96\";
+        do echo \"slave\${i} slots=48 max_slots=96\" >> ${hwd}/NPB3.4.2/NPB3.4-MPI/nodes;
         done"
-        scp conf/NPB/* slave${i}:${hwd}/NPB3.4.2/NPB3.4-MPI/config/
+        scp ../conf/NPB/* slave${i}:${hwd}/NPB3.4.2/NPB3.4-MPI/config/
 
         # Compile NPB Workloads
-        for i in $(seq 1 $num_clients)
-        do
-            ssh slave${i} "cd ${hwd}/NPB3.4.2/NPB3.4-MPI/; make suite"
-        done
+        ssh slave${i} "cd ${hwd}/NPB3.4.2/NPB3.4-MPI/; make suite"
     done
 }
 
@@ -141,13 +138,13 @@ echo "ssh-add ${hwd}/.ssh/${key}" >> ${hwd}/.bashrc
 
 
 # Modify /etc/hosts on the server
-sed "s/127.0/# 127.0/" < /etc/hosts > conf/nhosts
+sed "s/127.0/# 127.0/" < /etc/hosts > ../conf/nhosts
 # for i in $(seq 1 $num_clusters)
 # do
 #     echo "${$(tail -$num_clusters conf/clusterIPs)[$((2*${i}-1))]} master${i}" >> nhosts
 # done
 
-lines=$(tail -$num_clusters conf/clusterIPs)
+lines=$(tail -$num_clusters ../conf/clusterIPs)
 SAVEIFS=$IFS
 IFS=$'\n'
 lines=($lines)
@@ -156,11 +153,11 @@ IFS=$SAVEIFS
 for (( i=0; i<${#lines[@]}; i++ ))
 do
     line=(${lines[$i]})
-    echo "${line[0]} master$((i+1))" >> conf/nhosts
+    echo "${line[0]} master$((i+1))" >> ../conf/nhosts
 done
 
-cat conf/clusterIPs >> conf/nhosts
-sudo cp conf/nhosts /etc/hosts
+cat ../conf/clusterIPs >> ../conf/nhosts
+sudo cp ../conf/nhosts /etc/hosts
 
 
 # Add clients
@@ -185,10 +182,10 @@ done
 for (( i=0; i<${#lines[@]}; i++ ))
 do
     line=(${lines[$i]})
-    echo "${line[0]} master" > conf/clusterIPs_$((i+1))
+    echo "${line[0]} master" > ../conf/clusterIPs_$((i+1))
     start=$((2+${num_workers}*${i}))
     end=$((1+${num_workers}*((${i}+1))))
-    worker_lines=$(sed -n "$start,$end p" conf/clusterIPs)
+    worker_lines=$(sed -n "$start,$end p" ../conf/clusterIPs)
     SAVEIFS=$IFS
     IFS=$'\n'
     worker_lines=($worker_lines)
@@ -196,7 +193,7 @@ do
     for (( j=0; j<${#worker_lines[@]}; j++ ))
     do
         line=(${worker_lines[$j]})
-        echo "${line[0]} slave$((j+1))" >> conf/clusterIPs_$((i+1))
+        echo "${line[0]} slave$((j+1))" >> ../conf/clusterIPs_$((i+1))
     done
 done
 
@@ -207,7 +204,7 @@ do
     end=$((${num_workers}*${i}))
 
     scp ${hwd}/.ssh/${key} cc@master${i}:${hwd}/.ssh
-    scp conf/clusterIPs_${i} cc@master${i}:${hwd}/clusterIPs
+    scp ../conf/clusterIPs_${i} cc@master${i}:${hwd}/clusterIPs
 
     ssh cc@master${i} \
     "echo ${evalcmd} >> ${hwd}/.bashrc;
@@ -219,7 +216,7 @@ do
     for j in $(seq $start $end)
     do
         scp ${hwd}/.ssh/${key} cc@slave${j}:${hwd}/.ssh
-        scp conf/clusterIPs_${i} cc@slave${j}:${hwd}/clusterIPs
+        scp ../conf/clusterIPs_${i} cc@slave${j}:${hwd}/clusterIPs
         ssh cc@slave${j} \
         "echo ${evalcmd} >> ${hwd}/.bashrc;
         echo 'ssh-add ${hwd}/.ssh/${key}' >> ${hwd}/.bashrc;
@@ -280,11 +277,11 @@ done
 # Enable msr tools, Copy and compile RAPL, Set perf event configuration, Copy DPS
 sudo modprobe msr
 sudo sysctl -n kernel.perf_event_paranoid=-1
-for w in $(seq 1 $num_clients);
+for i in $(seq 1 $num_clients);
 do
     scp -r ${hwd}/DPS cc@slave${w}:${hwd}/
-    ssh slave${w} "cp -r ${hwd}/DPS/RAPL ${hwd}/RAPL"
-    ssh slave${w} \
+    ssh slave${i} "cp -r ${hwd}/DPS/RAPL ${hwd}/RAPL"
+    ssh slave${i} \
     "sudo modprobe msr;
     sudo sysctl -n kernel.perf_event_paranoid=-1;
     cd RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;"
@@ -294,9 +291,9 @@ done
 # Build DPS
 python3 -m pip install --upgrade pip build numpy
 python3 -m pip install ${hwd}/DPS
-for w in $(seq 1 $num_clients);
+for i in $(seq 1 $num_clients);
 do
-    scp -r ${hwd}/DPS cc@slave${w}:${hwd}/
+    # scp -r ${hwd}/DPS cc@slave${w}:${hwd}/
     ssh slave${i} \
     "python3 -m pip install --upgrade pip build numpy;
     python3 -m pip install ${hwd}/DPS"

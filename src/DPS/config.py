@@ -3,11 +3,12 @@ from pathlib import Path
 class config_type:
     def __init__(self):
         # Cluster and networking
-        self.NODE_COUNT = 6
+        self.NODE_COUNT = 10
         self.CLUSTER_COUNT = 2
         self.CORE_COUNT = 384
-        self.EXP_NODES = [1,2,3,4,5,6]
-        self.EXP_IPS = ['10.52.2.243', '10.52.2.230', '10.52.3.118', '10.52.3.133', '10.52.3.111', '10.52.1.93']
+        self.EXP_NODES = [1,2,3,4,5,6,7,8,9,10]
+        self.EXP_IPS = ['<ip-address>', '<ip-address>', '<ip-address>', '<ip-address>', '<ip-address>',
+                        '<ip-address>', '<ip-address>', '<ip-address>', '<ip-address>', '<ip-address>']
         self.SLAVE_USER = "cc"
 
         # Benchmark

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt install maven python2;
+sudo apt install --assume-yes maven python2;
 cwd=$(pwd);
 cd $HOME/HiBench;
 mvn -Psparkbench -Dmodules -Pmicro clean package;
