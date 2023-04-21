@@ -20,19 +20,29 @@ have packed DPS into a Python package which needs Python in newer version to bui
 
 Setting up the cluster
 ----------------------------------------
-Before setting up the cluster, user needs to enter correct information in the `clusterIPs` file
-and `src/config.py` file accordingly.
+Before setting up the cluster, the user needs copy the public key file into the control node's 
+`$HOME/.ssh/` directory, and enter correct information in the `conf/clusterIPs` file
+and `src/config.py` file accordingly. All nodes need to use the same private and public keys. Enter
+the home directory, public key file name, and number of clusters in `setup_cluster.sh`
 
 Execute the following commands to setup connections, install packages and configure packages.
 Users can install the above packages independently. The setup_cluster.sh script also includes 
 installing and configuring the above packages. 
 
-./setup_clusters.sh <args>
+./setup_cluster.sh <args>
 
 Use args to declare packages to install, which includes java, hadoop, spark, hibench, npb. For
 example, execute the following commands to setup everything on an empty node.
 
-./setup_clusters.sh java hadoop spark hibench npb
+./setup_cluster.sh java hadoop spark hibench npb
+
+Initialize Hadoop, Spark and Spark workloads
+----------------------------------------
+SSH into the two master nodes. Then execute the following commands to build all benchmark 
+workloads used in the paper.
+
+$HOME/DPS/initialize_hibench_hadoop_spark.sh
+
 
 Running Experiments
 ----------------------------------------

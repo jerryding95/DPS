@@ -13,7 +13,7 @@ class config_type:
         # Benchmark
         self.HIBENCH_PATH = Path(f'{Path.home()}/HiBench/bin/workloads/')
         self.NPB_PATH = Path(f"{Path.home()}/NPB3.4.2/NPB3.4-MPI");
-        self.NPB_CLASS = {'bt':'D', 'cg':'E', 'ep':'E', 'ft':'E', 'is':'E', 'lu':'E', 'mg':'E', 'sp':'D'}
+        self.NPB_CLASS = {'bt':'E', 'cg':'E', 'ep':'F', 'ft':'E', 'is':'E', 'lu':'E', 'mg':'E', 'sp':'E'}
         self.NPB_NPERNODE = {'bt':36, 'cg':32, 'ep':48, 'ft':32, 'is':32, 'lu':48, 'mg':32, 'sp':36}
         
         # Monitoring

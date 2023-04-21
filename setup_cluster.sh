@@ -1,10 +1,18 @@
 #!/bin/bash
-hwd="/home/cc"
+
 key="skylakeWorker.pem"
 num_clusters=2
+
+hwd=$HOME
+export KEY=${key}
+export NUM_CLUSTERS=${num_clusters}
+echo "export KEY=${key}" >> ${hwd}/.bashrc
+echo "export NUM_CLUSTERS=${num_clusters}" >> ${hwd}/.bashrc
+
 num_nodes=$(cat conf/clusterIPs | wc -l)
-num_clients=$num_nodes
+num_clients=$(($num_nodes-1))
 num_workers=$((num_clients/num_clusters-1))
+
 
 function install_java {
     # sudo apt install openjdk-8-jdk
@@ -32,10 +40,8 @@ function install_hadoop {
         scp -r ${hwd}/hadoop slave${i}:${hwd}/
         ssh slave${i} \
         "echo \"export HADOOP_HOME=${hwd}/hadoop/\" >> ${hwd}/.bashrc;
-        echo \"export PATH=\$PATH:${hwd}/hadoop/bin/\" >> ${hwd}/.bashrc"
+        echo \"export PATH=\\\$PATH:${hwd}/hadoop/bin/\" >> ${hwd}/.bashrc"
     done
-
-
 }
 
 function install_spark {
@@ -53,7 +59,7 @@ function install_spark {
         scp -r ${hwd}/spark slave${i}:${hwd}/
         ssh slave${i} \
         "echo \"export SPARK_HOME=${hwd}/spark/\" >> ${hwd}/.bashrc;
-        echo \"export PATH=\$PATH:${hwd}/spark/bin/\" >> ${hwd}/.bashrc"
+        echo \"export PATH=\\\$PATH:${hwd}/spark/bin/\" >> ${hwd}/.bashrc"
     done
 }
 
@@ -67,7 +73,7 @@ function install_hibench {
     for i in $(seq 1 $num_clusters)
     do
         ssh master${i} \
-        "git clone --branch HiBench-7.1 https://github.com/Intel-bigdata/HiBench.git;
+        "git clone --branch HiBench-7.1-22-g827c9f69 https://github.com/Intel-bigdata/HiBench.git;
         mv HiBench ${hwd}/HiBench"
 
         line=(${lines[$((i-1))]})
@@ -108,9 +114,22 @@ function install_npb {
         ssh slave${i} \
         "wget \"https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz\";
         tar -xf NPB3.4.2.tar.gz;
-        mv NPB3.4.2 ${hwd}/"
+        mv NPB3.4.2 ${hwd}/;
+        sudo apt install gfortran libopenmpi-dev;
+        for i in \$(seq 1 $num_workers);
+        do echo \"slave\${i} slots=48 max_slots=96\";
+        done"
+        scp conf/NPB/* slave${i}:${hwd}/NPB3.4.2/NPB3.4-MPI/config/
+
+        # Compile NPB Workloads
+        for i in $(seq 1 $num_clients)
+        do
+            ssh slave${i} "cd ${hwd}/NPB3.4.2/NPB3.4-MPI/; make suite"
+        done
     done
 }
+
+
 
 ################################################################################
 ######################## Establish Cluster Connections #########################
@@ -213,6 +232,8 @@ done
 ################################################################################
 ################################################################################
 
+
+
 ################################################################################
 ######################## Download and Install packages #########################
 
@@ -251,6 +272,7 @@ done
 ################################################################################
 
 
+
 ################################################################################
 #################### Dispatch DPS and Change Configurations ####################
 
@@ -266,7 +288,6 @@ do
     "sudo modprobe msr;
     sudo sysctl -n kernel.perf_event_paranoid=-1;
     cd RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;"
-
 done
 
 
@@ -280,9 +301,6 @@ do
     "python3 -m pip install --upgrade pip build numpy;
     python3 -m pip install ${hwd}/DPS"
 done
-
-
-
 
 ################################################################################
 ################################################################################
