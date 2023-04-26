@@ -1,4 +1,4 @@
-# DPS
+# DPS - Dynamic Power Scheduler
 
 Project Description
 ----------------------------------------
@@ -7,13 +7,13 @@ This artifact is part of the paper DPS: Adaptive Power Management for Overprovis
 Dependency
 ----------------------------------------
 The experiments in the paper is conducted with packages in the following versions:
-Ubuntu 18.04
-Python 3.6
-Java OpenJDK 8u362-b9
-Hadoop 2.7.7
-Spark 2.4.8
-HiBench 7.1
-NPB 3.4.2
+Ubuntu 18.04\n
+Python 3.6\n
+Java OpenJDK 8u362-b9\n
+Hadoop 2.7.7\n
+Spark 2.4.8\n
+HiBench 7.1\n
+NPB 3.4.2\n
 
 However we require a Python version newer than 3.8 to reproduce the experiment results, as we
 have packed DPS into a Python package which needs Python in newer version to build.
