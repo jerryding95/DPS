@@ -25,14 +25,12 @@ Before setting up the cluster, the user needs copy the public key file into the 
 Execute the following commands to download the repository and locate the files in which configuration needs to be edited.
 ```
 git clone https://github.com/jerryding95/DPS.git
-cd DPS
-# Make modifications in setup/setupcluster.sh, conf/clusterIPs, and src/config.py accordingly
+# Make modifications in DPS/setup/setupcluster.sh, DPS/conf/clusterIPs, and DPS/src/config.py accordingly
 ```
 
 Then execute the following command to install packages and configure packages. 
 ```
-git clone https://github.com/jerryding95/DPS.git
-cd DPS
+cd DPS/setup
 ./setup_cluster.sh <args>
 ```
 
@@ -45,7 +43,7 @@ Initialize Hadoop, Spark and HiBench workloads
 ----------------------------------------
 Once the above script completes, SSH into the two master nodes ad execute the following command to start the Hadoop and Spark processes, and build all required Spark workloads in HiBench.
 ```
-$HOME/DPS/initialize_hibench_hadoop_spark.sh
+$HOME/DPS/setup/initialize_hibench_hadoop_spark.sh
 ```
 
 Running Experiments
