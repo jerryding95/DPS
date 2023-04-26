@@ -57,9 +57,7 @@ def execute_cluster_pairs(ind, pair_bench, count, duration_file, scheduler):
 
 				print(f'Cluster {ind+1}: Starting {benchmark}')
 				app_start_time = time.time()
-				duration = start_spark(ind+1, benchmark, PARALLELISM)
-				# time.sleep(3)
-				# duration = 3
+				duration = start_spark(ind+1, benchmark, PARALLELISM_HIGH)
 				app_end_time = time.time()
 
 				with open(duration_file, 'a') as f:
@@ -123,7 +121,7 @@ if __name__ == '__main__':
 	parser.add_argument('--record', type=str, required=False, default='')
 	args = parser.parse_args()
 
-	if args.record: config.RECORD_PATH = args.record
+	if args.record: config.RECORD_PATH = Path(args.record)
 	mkdir(config.RECORD_PATH)
 	mkdir(config.TEMPT_PATH)
 

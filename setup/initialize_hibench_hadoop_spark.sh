@@ -3,8 +3,7 @@
 sudo apt install --assume-yes maven python2;
 cwd=$(pwd);
 cd $HOME/HiBench;
-mvn -Psparkbench -Dmodules -Pmicro clean package;
-mvn -Psparkbench -Dmodules -Pml clean package;
+mvn -Psparkbench -Dmodules -Pmicro -Pml clean package;
 cd $cwd;
 
 # Setup Hadoop
@@ -20,12 +19,12 @@ cd $cwd;
 micro_workloads=("wordcount" "sort" "terasort" "repartition")
 ml_workloads=("kmeans" "lda" "lr" "linear" "bayes" "rf" "gmm")
 
-sed -i '3s/.*/hibench.scale.profile                large/' \$HOME/HiBench/conf/hibench.conf
+sed -i '3s/.*/hibench.scale.profile                large/' $HOME/HiBench/conf/hibench.conf
 for w in ${micro_workloads[@]}
 do
 	$HOME/HiBench/bin/workloads/micro/${w}/prepare/prepare.sh
 done
-sed -i '3s/.*/hibench.scale.profile                bigdata/' \$HOME/HiBench/conf/hibench.conf
+sed -i '3s/.*/hibench.scale.profile                bigdata/' $HOME/HiBench/conf/hibench.conf
 for w in ${ml_workloads[@]}
 do
 	$HOME/HiBench/bin/workloads/ml/${w}/prepare/prepare.sh

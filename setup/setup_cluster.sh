@@ -1,7 +1,8 @@
 #!/bin/bash
 
-key="skylakeWorker.pem"
-num_clusters=2
+
+key=                    # Name of the shared public key file
+num_clusters=2          # Number of clusters, default as 2
 
 hwd=$HOME
 export KEY=${key}
@@ -15,8 +16,6 @@ num_workers=$((num_clients/num_clusters-1))
 
 
 function install_java {
-    # sudo apt install openjdk-8-jdk
-    # echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/" >> ${hwd}/.bashrc
     for i in $(seq 1 $num_clients)
     do
         ssh slave${i} "sudo apt update;
@@ -42,6 +41,7 @@ function install_hadoop {
         "echo \"export HADOOP_HOME=${hwd}/hadoop/\" >> ${hwd}/.bashrc;
         echo \"export PATH=\\\$PATH:${hwd}/hadoop/bin/\" >> ${hwd}/.bashrc"
     done
+    rm hadoop-2.7.7.tar.gz
 }
 
 function install_spark {
@@ -61,6 +61,7 @@ function install_spark {
         "echo \"export SPARK_HOME=${hwd}/spark/\" >> ${hwd}/.bashrc;
         echo \"export PATH=\\\$PATH:${hwd}/spark/bin/\" >> ${hwd}/.bashrc"
     done
+    rm spark-2.4.8-bin-hadoop2.7.tgz
 }
 
 function install_hibench {
@@ -73,8 +74,10 @@ function install_hibench {
     for i in $(seq 1 $num_clusters)
     do
         ssh master${i} \
-        "git clone --branch HiBench-7.1-22-g827c9f69 https://github.com/Intel-bigdata/HiBench.git;
-        mv HiBench ${hwd}/HiBench"
+        "git clone https://github.com/Intel-bigdata/HiBench.git;
+        mv HiBench \$HOME/HiBench;
+        cd \$HOME/HiBench;
+        git checkout tag/7.1-22-g827c9f69;"
 
         line=(${lines[$((i-1))]})
         masterip=${line[0]}
@@ -92,13 +95,6 @@ function install_hibench {
             line=(${worker_lines[$j]})
             workerips="${workerips} ${line[0]}"
         done
-
-        # masterip=${$(sed -n "1,1p" conf/clusterIPs_${i})[1]}
-        # workerips=""
-        # for j in (seq 1 ${num_workers})
-        # do
-        #     workerips="${workerips} ${$(sed -n "2,$((num_workers+1))p" conf/clusterIPs_${i})[$((2*j-1))]}"
-        # done
 
         scp ../conf/HiBench/* master${i}:${hwd}/HiBench/conf/
         ssh master${i} \
@@ -139,10 +135,6 @@ echo "ssh-add ${hwd}/.ssh/${key}" >> ${hwd}/.bashrc
 
 # Modify /etc/hosts on the server
 sed "s/127.0/# 127.0/" < /etc/hosts > ../conf/nhosts
-# for i in $(seq 1 $num_clusters)
-# do
-#     echo "${$(tail -$num_clusters conf/clusterIPs)[$((2*${i}-1))]} master${i}" >> nhosts
-# done
 
 lines=$(tail -$num_clusters ../conf/clusterIPs)
 SAVEIFS=$IFS
@@ -211,7 +203,11 @@ do
     echo 'ssh-add ${hwd}/.ssh/${key}' >> ${hwd}/.bashrc;
     sed \"s/127.0/# 127.0/\" < /etc/hosts > nhosts;
     cat clusterIPs >> nhosts;
-    sudo cp nhosts /etc/hosts"
+    sudo cp nhosts /etc/hosts;
+    ssh-keyscan master >> ${hwd}/.ssh/known_hosts;
+    for i in \$(seq 1 $num_workers);
+    do ssh-keyscan slave\${i} >> ${hwd}/.ssh/known_hosts;
+    done"
 
     for j in $(seq $start $end)
     do
@@ -222,7 +218,11 @@ do
         echo 'ssh-add ${hwd}/.ssh/${key}' >> ${hwd}/.bashrc;
         sed \"s/127.0/# 127.0/\" < /etc/hosts > nhosts;
         cat clusterIPs >> nhosts;
-        sudo cp nhosts /etc/hosts"
+        sudo cp nhosts /etc/hosts;
+        ssh-keyscan master >> ${hwd}/.ssh/known_hosts;
+        for i in \$(seq 1 $num_workers);
+        do ssh-keyscan slave\${i} >> ${hwd}/.ssh/known_hosts;
+        done;"
     done
 done
 
@@ -249,7 +249,7 @@ do
             echo "Install spark"
             install_spark
             ;;
-        hibech)
+        hibench)
             echo "Install hibench"
             install_hibench
             ;;
@@ -279,12 +279,14 @@ sudo modprobe msr
 sudo sysctl -n kernel.perf_event_paranoid=-1
 for i in $(seq 1 $num_clients);
 do
-    scp -r ${hwd}/DPS cc@slave${w}:${hwd}/
-    ssh slave${i} "cp -r ${hwd}/DPS/RAPL ${hwd}/RAPL"
+    scp -r ${hwd}/DPS cc@slave${i}:${hwd}/
+    ssh slave${i} "cp -r \$HOME/DPS/RAPL \$HOME/RAPL"
     ssh slave${i} \
-    "sudo modprobe msr;
+    "sudo apt-get --assume-yes install linux-tools-common linux-tools-generic linux-tools-`uname -r`;
+    sudo modprobe msr;
     sudo sysctl -n kernel.perf_event_paranoid=-1;
-    cd RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;"
+    cd \$HOME/RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;
+    mkdir \$tmp;"
 done
 
 
@@ -293,10 +295,9 @@ python3 -m pip install --upgrade pip build numpy
 python3 -m pip install ${hwd}/DPS
 for i in $(seq 1 $num_clients);
 do
-    # scp -r ${hwd}/DPS cc@slave${w}:${hwd}/
     ssh slave${i} \
-    "python3 -m pip install --upgrade pip build numpy;
-    python3 -m pip install ${hwd}/DPS"
+    "sudo python3 -m pip install --upgrade pip build numpy;
+    sudo python3 -m pip install ${hwd}/DPS"
 done
 
 ################################################################################

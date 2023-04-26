@@ -14,12 +14,12 @@ from scipy.signal import find_peaks
 
 class DPS_supermaster:
 	SHAPE = (len(config.EXP_NODES),2)
-	RAPL_CAP_ARR = np.ones(SHAPE,dtype=np.int)*config.TDP
+	RAPL_CAP_ARR = np.ones(SHAPE,dtype=int)*config.TDP
 	RAPL_POWER_ARR = np.ones(SHAPE)
 	EST_POWER_ARR_HX = np.ones((20,SHAPE[0],SHAPE[1]))*20
-	RAPL_CAP_FLAGS = np.ones(SHAPE,dtype=np.int)
-	RAPL_POWER_LEVEL = np.zeros(SHAPE,dtype=np.int)
-	SHORT_EPOCH_FLAG = np.zeros(SHAPE,dtype=np.int)
+	RAPL_CAP_FLAGS = np.ones(SHAPE,dtype=int)
+	RAPL_POWER_LEVEL = np.zeros(SHAPE,dtype=int)
+	SHORT_EPOCH_FLAG = np.zeros(SHAPE,dtype=int)
 	_sentinel = Sentinel(config.CLUSTER_COUNT)
 	ALGS = ['const','dps','oracle','slurm']
 	CAP = 165
@@ -32,7 +32,7 @@ class DPS_supermaster:
 	measurement_noise = None
 	ALG = None
 	filter_md = None
-	time_file cap_file, level_file, est_file = None, None, None, None
+	time_file, cap_file, level_file, est_file = None, None, None, None
 	worker_p_arr, stdout_arr = [], []
 	sockets = []
 
@@ -41,15 +41,15 @@ class DPS_supermaster:
 			percentile_inc = 0.2, percentile_dec = 0.2, allowance = 0.95, \
 			time_file = 'time.log', cap_file = 'cap.log', level_file = 'level.log', est_file = 'est.log'):
 		# self.SHAPE = (len(config.EXP_NODES),2)
-		# self.RAPL_CAP_ARR = np.ones(SHAPE,dtype=np.int)*config.TDP
+		# self.RAPL_CAP_ARR = np.ones(SHAPE,dtype=int)*config.TDP
 		# self.RAPL_POWER_ARR = np.ones(SHAPE)
 		# self.EST_POWER_ARR_HX = np.ones((20,SHAPE[0],SHAPE[1]))*20
-		# self.RAPL_CAP_FLAGS = np.ones(SHAPE,dtype=np.int)
-		# self.RAPL_POWER_LEVEL = np.zeros(SHAPE,dtype=np.int)
-		# self.SHORT_EPOCH_FLAG = np.zeros(SHAPE,dtype=np.int)
+		# self.RAPL_CAP_FLAGS = np.ones(SHAPE,dtype=int)
+		# self.RAPL_POWER_LEVEL = np.zeros(SHAPE,dtype=int)
+		# self.SHORT_EPOCH_FLAG = np.zeros(SHAPE,dtype=int)
 		# self.SLURM_SCHEDULER = None
 
-		self.RAPL_CAP_ARR = np.ones(self.SHAPE,dtype=np.int)*config.TDP
+		self.RAPL_CAP_ARR = np.ones(self.SHAPE,dtype=int)*config.TDP
 		self.ALG = alg
 		self.deriv_threshold = deriv_threshold
 		self.process_noise = process_noise
@@ -82,6 +82,7 @@ class DPS_supermaster:
 		self.sockets = self.connect_to_workers()
 
 	def __del__(self):
+		self.send_end_msg()
 		self.cap_file.close()
 		self.level_file.close()
 		self.est_file.close()
@@ -102,7 +103,7 @@ class DPS_supermaster:
 		for i in config.EXP_NODES:
 			print(f'Starting dyn_rapl_worker on worker{i}')
 			fname = f"logs/stdout_worker_{i}.txt"
-			f = open(config.RECORD_PATH.joinpath(fname), "a")
+			f = open(config.RECORD_PATH.joinpath(fname), 'a+')
 			p = subprocess.Popen(["ssh", f'slave{i}', cmd], stdout=f,stderr=f)
 			agent_p_arr.append(p)
 			stdout_arr.append(f)
@@ -358,7 +359,7 @@ class DPS_supermaster:
 	############## Recording #################
 
 	def record_rapl(self):
-		np.savetxt(self.time_file, time.time())
+		np.savetxt(self.time_file, [time.time()])
 		np.savetxt(self.cap_file, self.RAPL_CAP_ARR)
 		np.savetxt(self.level_file, self.RAPL_POWER_LEVEL)
 		np.savetxt(self.est_file, self.EST_POWER_ARR_HX[-1])
@@ -380,7 +381,7 @@ class DPS_supermaster:
 			except ConnectionRefusedError:
 				# end_monitoring(stdout_arr)
 				print(f'Connection refused by Worker {node}, exitting...')
-				killProcess('dyn_rapl_worker',sudo=True)
+				killProcess('dps_client',sudo=True)
 				sys.exit()
 		return sockets
 

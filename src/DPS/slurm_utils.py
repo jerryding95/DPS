@@ -9,8 +9,8 @@ class Slurm:
 		self._shape = (len(config.EXP_NODES),2)
 		self._budget = init_cap * 2 * len(config.EXP_NODES)
 		self._power_arr = np.ones(self._shape)
-		self._cap_arr = np.ones(self._shape, dtype=np.int) * init_cap
-		self._cap_flag_arr = np.zeros(self._shape, dtype=np.int)
+		self._cap_arr = np.ones(self._shape, dtype=int) * init_cap
+		self._cap_flag_arr = np.zeros(self._shape, dtype=int)
 		self._inc_threshold = inc_threshold
 		self._dec_threshold = dec_threshold
 		self._min_cap = config.MIN_POWER

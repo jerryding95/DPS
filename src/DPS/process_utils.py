@@ -11,7 +11,7 @@ def runRemoteCmd(cmd, wait=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     # for i in range(1, config.NODE_COUNT+1):
     for i in config.EXP_NODES:
         host = "slave" + str(i)
-        process = subprocess.Popen(["ssh", "-f", host, cmd], stdout=stdout,stderr=stderr)
+        process = subprocess.Popen(["ssh", "-f", host, cmd], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         if wait:
             print(f'Worker {i}: {cmd}')
             out, err = process.communicate()
@@ -46,9 +46,10 @@ def checkProcess(name='perf'):
     return flags
 
 def mkdir(pname, sudo=False):
-    cmd = ["mkdir" pname]
+    cmd = ["mkdir", pname]
     cmd = ["sudo"]+cmd if sudo else cmd
-    subprocess.Popen(cmd, stdout=stdout,stderr=stderr)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    p.communicate()
     return
 
 def mkdir_clients(pname, wait=True, sudo=False):

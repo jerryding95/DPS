@@ -207,10 +207,10 @@ def set_worker_pkg_power_cap(worker,cap0,cap1):
     return
 
 def set_workers_pkg_power_cap(cap0,cap1):
-    runRemoteCmd(f'sudo python3 /home/cc/chameleon-files/rapl_utils.py set_pkg_power_cap {cap0} {cap1}', wait=True)
+    runRemoteCmd(f'sudo python3 {Path.home()}/DPS/src/DPS/rapl_utils.py set_pkg_power_cap {cap0} {cap1}', wait=True)
 
 def set_workers_dram_power_cap(cap0,cap1):
-    runRemoteCmd(f'sudo python3 /home/cc/chameleon-files/rapl_utils.py set_dram_power_cap {cap0} {cap1}', wait=True)
+    runRemoteCmd(f'sudo python3 {Path.home()}/DPS/src/DPS/rapl_utils.py set_dram_power_cap {cap0} {cap1}', wait=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
