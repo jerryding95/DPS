@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-key=                    # Name of the shared public key file
+key='skylakeWorker.pem'                    # Name of the shared public key file
 num_clusters=2          # Number of clusters, default as 2
 
 hwd=$HOME
@@ -286,7 +286,7 @@ do
     sudo modprobe msr;
     sudo sysctl -n kernel.perf_event_paranoid=-1;
     cd \$HOME/RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;
-    mkdir \$tmp;"
+    mkdir \$HOME/tmp;"
 done
 
 
