@@ -2,7 +2,7 @@
 
 repeat=10
 sleeptime=60
-spark_low_bench=("sort" "terasort" "repartition")
+spark_low_bench=("sort" "terasort" "repartition" "wordcount")
 spark_high_bench=("kmeans" "lda" "lr" "linear" "bayes" "rf" "gmm")
 npb_bench=("bt" "cg" "ep" "ft" "is" "lu" "mg" "sp")
 
