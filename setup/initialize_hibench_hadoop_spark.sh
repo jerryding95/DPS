@@ -9,7 +9,7 @@ cd $cwd;
 # Setup Hadoop
 /home/cc/hadoop/bin/hdfs namenode -format
 /home/cc/hadoop/sbin/start-dfs.sh
-/home/cc/hadoop/bin/hdfs dfs -mkdir -p /user/cc/
+/home/cc/hadoop/bin/hdfs dfs -mkdir -p /user/$USER/
 /home/cc/hadoop/sbin/start-yarn.sh
 
 # Setup Spark

@@ -282,7 +282,7 @@ do
     scp -r ${hwd}/DPS cc@slave${i}:${hwd}/
     ssh slave${i} "cp -r \$HOME/DPS/RAPL \$HOME/RAPL"
     ssh slave${i} \
-    "sudo apt-get --assume-yes install linux-tools-common linux-tools-generic linux-tools-`uname -r`;
+    "sudo apt-get --assume-yes install linux-tools-common linux-tools-generic linux-tools-\`uname -r\`;
     sudo modprobe msr;
     sudo sysctl -n kernel.perf_event_paranoid=-1;
     cd \$HOME/RAPL; gcc RaplPowerMonitor_1s.c -o RaplPowerMonitor_1s -lm;
