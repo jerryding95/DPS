@@ -1,8 +1,8 @@
 #!/bin/bash
 
 declare -A prefixes
-prefixes=([bayes]="ml" [gbt]="ml" ["kmeans"]="ml" [lda]="ml" [linear]="ml" \
-	[lr]="ml" [pca]="ml" [rf]="ml" [svd]="ml" [svm]="ml" [als]="ml"\
+prefixes=([bayes]="ml" [gbt]="ml" [kmeans]="ml" [lda]="ml" [linear]="ml" \
+	[lr]="ml" [gmm]="ml" [rf]="ml" [svd]="ml" [svm]="ml" [als]="ml"\
 	[wordcount]="micro" [terasort]="micro" [dfsioe]="micro"\
 	 [repartition]="micro" [sleep]="micro" [sort]="micro")
 
