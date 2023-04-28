@@ -48,8 +48,8 @@ mkdir records/spark_npb/slurm
 mkdir records/spark_npb/dps
 for b in ${npb_bench[@]}
 do
-	# python3 exp.py --cap 110 --pms dps --count ${repeat} --pair_bench ${b} --record records/spark_npb/dps/${b}
-	# sleep ${sleeptime}
+	python3 exp.py --cap 110 --pms dps --count ${repeat} --pair_bench ${b} --record records/spark_npb/dps/${b}
+	sleep ${sleeptime}
 	python3 exp.py --cap 110 --pms slurm --count ${repeat} --pair_bench ${b} --record records/spark_npb/slurm/${b}
 	sleep ${sleeptime}
 done
