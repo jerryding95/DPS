@@ -75,7 +75,7 @@ if __name__ == '__main__':
 	ax.set_xticks(x,['Spark High Utility','Spark NPB'])
 	ax.set_ylabel('Fairness')
 	plt.show()
-	# plt.savefig('/Users/jerryding/dyn_rapl_figures/figure8.pdf', bbox_inches='tight', dpi=100)
+	# plt.savefig('fairness.pdf', bbox_inches='tight', dpi=100)
 
 
 

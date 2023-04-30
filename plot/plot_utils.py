@@ -112,7 +112,6 @@ def prepare_power_baseline(directory, node_per_cluster, cluster_count):
 	rapl_dict = prepare_rapl_dict(directory.joinpath('rapl_record.csv'))
 	rapl_data = np.array(list(rapl_dict.items()), dtype=object)[:,1]
 	rapl_data = np.array(rapl_data.tolist())
-	print(rapl_data.shape)
 	rapl_data = rapl_data.reshape(node_per_cluster*cluster_count,5,rapl_data.shape[1])
 	pkg_rapl_data = rapl_data[:,1:3]
 

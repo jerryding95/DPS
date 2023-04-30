@@ -52,7 +52,7 @@ if __name__ == '__main__':
 	fig.supylabel('Speedup normalized to\nperformance under Constant 110W cap', horizontalalignment='center', fontsize=8)
 	plt.subplots_adjust(top = .86, bottom = 0, right = 1, left = 0.15, hspace=0.6)
 	plt.show()
-	# plt.savefig('/Users/jerryding/dyn_rapl_figures/figure7a.pdf', bbox_inches='tight', dpi=100)
+	# plt.savefig('spark_npb_speedup.pdf', bbox_inches='tight', dpi=100)
 
 
 
